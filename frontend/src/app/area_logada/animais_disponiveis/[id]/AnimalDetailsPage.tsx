@@ -11,7 +11,7 @@ import * as S from './AnimalDetailsPage.styles'
 import { Button } from '@/components/Button'
 import { AnimalsContext } from '@/contexts/animals'
 import { Animal } from '@/@types/animal'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft } from '@phosphor-icons/react'
 import Link from 'next/link'
 import { getCookie } from 'cookies-next'
@@ -19,31 +19,33 @@ import { insertUserChat } from '@/api/insert-user-chat'
 
 export function AnimalDetailsPage() {
   const [animal, setAnimal] = useState<Animal | null>(null)
-
   const params = useParams<{ id: string }>()
-
   const { getAnimalById } = useContext(AnimalsContext)
+  const router = useRouter()
 
   useEffect(() => {
     const getAnimalResponse = getAnimalById(params.id)
-    console.log({ getAnimalResponse })
     setAnimal(getAnimalResponse)
   }, [getAnimalById, params.id])
 
   const handleContactAnimalOwner = async () => {
     try {
       const token = getCookie('token') || ''
-
       const response = await insertUserChat(animal?.userId || '', token)
 
       if (response.status !== 201) {
         alert('Ocorreu um erro ao contatar o dono, por favor tente novamente')
+        return
       }
 
       const chatId = response.data.chat.id
-
-      window.location.href = `/area_logada/conversas/${chatId}`
-    } catch (err) {}
+      router.push(`/area_logada/conversas/${chatId}`)
+    } catch (err) {
+      console.error('Falha ao tentar iniciar o chat:', err)
+      alert(
+        'Não foi possível contatar o dono no momento. Por favor, tente novamente mais tarde.',
+      )
+    }
   }
 
   if (!animal) return <span>Carregando...</span>
@@ -63,8 +65,8 @@ export function AnimalDetailsPage() {
             modules={[Pagination]}
             pagination={{ clickable: true }}
           >
-            {animal.images.map((image, index) => (
-              <S.AnimalPictureSwiperSlide key={index}>
+            {animal.images.map((image) => (
+              <S.AnimalPictureSwiperSlide key={image}>
                 <Image
                   src={`data:image/jpeg;base64,${image}`}
                   alt="Animal"

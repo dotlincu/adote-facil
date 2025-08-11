@@ -1,41 +1,43 @@
 'use client'
 
 import * as Dialog from '@radix-ui/react-dialog'
+import { useContext, useEffect, useState } from 'react'
+import { getCookie } from 'cookies-next'
 
 import { Button } from '@/components/Button'
 import { AnimalCard } from '@/components/AnimalCard'
 import { EmptyAnimals } from '@/components/EmptyAnimals'
 import { DefaultDialog } from '@/components/DefaultDialog'
-
-import * as S from './AvailableAnimalsPage.styles'
-import { useContext, useEffect, useState } from 'react'
-import { getCookie } from 'cookies-next'
-import { getAvailableAnimals } from '@/api/get-available-animals'
 import { AnimalsContext } from '@/contexts/animals'
+import { getAvailableAnimals } from '@/api/get-available-animals'
 import {
   AnimalFilterForm,
   AnimalFilterFormData,
 } from '@/components/AnimalFilterForm'
 
+import * as S from './AvailableAnimalsPage.styles'
+
 export function AvailableAnimalsPage() {
   const { availableAnimals, setAvailableAnimals } = useContext(AnimalsContext)
   const [filter, setFilter] = useState<AnimalFilterFormData | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchAvailableAnimals = async () => {
       setLoading(true)
       const token = getCookie('token')
 
-      const response = await getAvailableAnimals(filter, token || '')
-
-      console.log(response)
-
-      if (response.status === 200) {
-        setAvailableAnimals(response.data.animals)
+      try {
+        const response = await getAvailableAnimals(filter, token || '')
+        if (response.status === 200) {
+          setAvailableAnimals(response.data.animals)
+        }
+      } catch (error) {
+        console.error("Falha ao buscar animais:", error)
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     }
 
     fetchAvailableAnimals()
@@ -47,6 +49,28 @@ export function AvailableAnimalsPage() {
 
   const handleRemoveFilters = () => {
     setFilter(null)
+  }
+
+  const renderAnimalList = () => {
+    if (loading) {
+      return <p>Carregando...</p>
+    }
+
+    if (availableAnimals.length > 0) {
+      return (
+        <S.AnimalsListWrapper>
+          {availableAnimals.map((animal) => (
+            <AnimalCard
+              key={animal.id}
+              animal={animal}
+              listType="animals-available-to-adopt"
+            />
+          ))}
+        </S.AnimalsListWrapper>
+      )
+    }
+
+    return <EmptyAnimals page="animals-available-to-adopt" />
   }
 
   return (
@@ -66,7 +90,7 @@ export function AvailableAnimalsPage() {
                 <Button onClick={() => setDialogOpen(true)}>Filtrar</Button>
               </Dialog.Trigger>
               <DefaultDialog>
-                <Dialog.DialogTitle></Dialog.DialogTitle>
+                <Dialog.DialogTitle>Filtros</Dialog.DialogTitle>
                 <AnimalFilterForm
                   handleFilterAvailableAnimals={handleFilterAvailableAnimals}
                   closeDialog={() => setDialogOpen(false)}
@@ -76,21 +100,9 @@ export function AvailableAnimalsPage() {
           </S.FilterButtonsWrapper>
         )}
       </S.TitleWrapper>
-      {loading ? (
-        <p>Carregando...</p>
-      ) : availableAnimals.length ? (
-        <S.AnimalsListWrapper>
-          {availableAnimals.map((animal) => (
-            <AnimalCard
-              key={animal.id}
-              animal={animal}
-              listType="animals-available-to-adopt"
-            />
-          ))}
-        </S.AnimalsListWrapper>
-      ) : (
-        <EmptyAnimals page="animals-available-to-adopt" />
-      )}
+
+      {/* A função auxiliar é chamada aqui para renderizar o conteúdo dinâmico */}
+      {renderAnimalList()}
     </S.Wrapper>
   )
 }
