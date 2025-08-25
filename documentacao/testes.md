@@ -80,8 +80,11 @@ A seguir, a descrição em linguagem natural dos principais cenários cobertos.
 
 ### Como Executar os Testes E2E
 
-Antes de rodar os testes, certifique-se de que a aplicação esteja rodando em um terminal separado (`docker compose up`).
+Antes de rodar os testes, é necessário que o sistema possua um usuário de teste cadastrado. Certifique-se de que a aplicação esteja rodando em um terminal separado (`docker compose up`) e crie um usuário com as seguintes credenciais através da interface de cadastro:
+- E-mail: `usuario@mail.com`
+- Senha: `12345678`
 
+#### Execução 
 Diferente dos testes unitários, os comandos do Cypress devem ser executados a partir da pasta raiz do projeto (a pasta `adote-facil`), não da pasta `backend`.
 
 

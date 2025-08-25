@@ -5,7 +5,7 @@ Cypress.on('uncaught:exception', (err, runnable) => {
 describe('Cadastro de animal para adoção', () => {
   beforeEach(() => {
     cy.visit('http://localhost:3000/login')
-    cy.get('input[type="email"]').type('lincoln@mail.com')
+    cy.get('input[type="email"]').type('usuario@mail.com')
     cy.get('input[type="password"]').type('12345678')
     cy.contains('button', 'Login').click()
   })

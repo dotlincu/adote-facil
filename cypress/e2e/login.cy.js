@@ -3,7 +3,7 @@ describe('Login', () => {
     cy.visit('http://localhost:3000/login')
 
     // preenche o login
-    cy.get('input[name="email"]').type('lincoln@mail.com')
+    cy.get('input[name="email"]').type('usuario@mail.com')
     cy.get('input[name="password"]').type('12345678')
 
     // clica no botão

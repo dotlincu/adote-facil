@@ -5,7 +5,7 @@ Cypress.on('uncaught:exception', (err, runnable) => {
 describe('Editar dados pessoais', () => {
   beforeEach(() => {
     cy.visit('http://localhost:3000/login');
-    cy.get('input[type="email"]').type('lincoln@mail.com');
+    cy.get('input[type="email"]').type('usuario@mail.com');
     cy.get('input[type="password"]').type('12345678');
     cy.contains('button', 'Login').click();
 
@@ -14,8 +14,8 @@ describe('Editar dados pessoais', () => {
   });
 
   it('Deve alterar apenas o nome do usuário com sucesso', () => {
-    const novoNome = 'LincolnAtualizado';
-    const emailOriginal = 'lincoln@mail.com';
+    const novoNome = 'UsuarioAtualizado';
+    const emailOriginal = 'usuario@mail.com';
 
     // Limpa o campo de nome e digita o novo nome
     cy.get('input[name="name"]').clear().type(novoNome);
