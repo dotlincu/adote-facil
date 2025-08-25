@@ -34,4 +34,27 @@ describe('Cadastro de animal para adoção', () => {
     cy.contains('Meus animais disponíveis para adoção').click({ force: true })
     cy.contains('Linux').should('be.visible')
     })
+
+    // cenário alternativo
+    it('Deve exibir uma mensagem de erro ao tentar cadastrar sem preencher o nome', () => {
+    cy.contains('Disponibilizar animal para adoção').click({ force: true })
+
+    // propositalmente NÃO preenchemos o campo de nome
+    // cy.get('input[name="name"]').type('Linux') 
+
+    // preenchemos os outros campos para focar o teste no erro do nome
+    cy.get('button[role="combobox"]').filter(':contains("Selecione um tipo")').click();
+    cy.get('div[role="option"]').contains('Cachorro').click();
+    cy.get('button[role="combobox"]').filter(':contains("Selecione um gênero")').click();
+    cy.get('div[role="option"]').contains('Macho').click();
+
+    // tenta submeter o formulário
+    cy.contains('button', 'Cadastrar').click();
+
+    // verificação do erro
+    cy.contains('O nome é obrigatório').should('be.visible');
+
+    // Verificação da URL para garantir que não saiu da página
+    cy.url().should('include', '/area_logada/disponibilizar_animal');
+  })
 })

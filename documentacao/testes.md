@@ -63,22 +63,44 @@ A seguir, a descrição em linguagem natural dos principais cenários cobertos.
 * **Quando** eu preencho o campo de e-mail e senha com minhas credenciais válidas
 * **E** clico no botão "Entrar"
 * **Então** eu devo ser redirecionado para a página inicial de animais
-* **E** devo ver uma mensagem de boas-vindas.
+* **E** devo ver uma mensagem de boas-vindas
 
-#### Cenário 2: Tentativa de Cadastro de Animal sem Estar Logado (`cadastroAnimal.cy.js`)
+#### Cenário 1.1: Tentativa de Login com Credenciais Inválidas (cenário alternativo)
+* **Dado** que eu sou um usuário cadastrado e estou na página de login
+* **Quando** eu preencho o campo de e-mail com um e-mail válido
+* **E** preencho o campo de senha com uma senha incorreta
+* **E** clico no botão "Entrar"
+* **Então** eu devo permanecer na página de login
+* **E** devo ver uma mensagem de erro com "A senha deve conter no mínimo 8 caracteres"
+
+#### Cenário 2: Cadastro Bem-Sucedido de um Novo Animal (`cadastroAnimal.cy.js`)
 * **Dado** que eu sou um usuário autenticado e estou na página principal
 * **Quando** eu clico em "Disponibilizar animal para adoção"
 * **E** preencho o formulário de cadastro do animal com dados válidos (nome "Linux", tipo "Cachorro", etc.)
 * **E** anexo uma foto do animal
 * **E** clico no botão "Cadastrar"
-* **Então** o animal "Linux" deve ser listado com sucesso na minha página de "Meus animais disponíveis para adoção".
+* **Então** o animal "Linux" deve ser listado com sucesso na minha página de "Meus animais disponíveis para adoção"
+
+#### Cenário 2.1: Tentativa de Cadastro com Campo Obrigatório Vazio (cenário alternativo)
+* **Dado** que eu sou um usuário autenticado e estou na página de cadastro de animais
+* **Quando** eu preencho o formulário, mas deixo o campo "Nome" em branco
+* **E** clico no botão "Cadastrar"
+* **Então** eu devo permanecer na página de cadastro
+* **E** devo ver uma mensagem de erro indicando que o nome é obrigatório
 
 #### Cenário 3: Edição de Dados do Perfil (`editarDados.cy.js`)
 * **Dado** que estou logado no sistema
 * **E** navego até a minha página de perfil
 * **Quando** eu altero meu nome e clico em "Salvar"
 * **Então** devo ver uma mensagem de "Dados atualizados com sucesso!"
-* **E** o novo nome deve ser exibido na página.
+* **E** o novo nome deve ser exibido na página
+
+#### Cenário 3.1: Tentativa de Edição com Dado Inválido (cenário alternativo)
+* **Dado** que estou logado no sistema e na minha página de "Editar dados pessoais"
+* **Quando** eu apago o meu nome, deixando o campo em branco
+* **E** clico em "Salvar alterações"
+* **Então** eu devo permanecer na página de edição
+* **E** devo ver uma mensagem de erro indicando que o nome não pode ser vazio.
 
 ### Como Executar os Testes E2E
 
