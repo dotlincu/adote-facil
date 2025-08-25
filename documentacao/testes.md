@@ -66,10 +66,12 @@ A seguir, a descrição em linguagem natural dos principais cenários cobertos.
 * **E** devo ver uma mensagem de boas-vindas.
 
 #### Cenário 2: Tentativa de Cadastro de Animal sem Estar Logado (`cadastroAnimal.cy.js`)
-* **Dado** que eu sou um visitante não autenticado
-* **Quando** eu tento acessar a página de cadastro de animais diretamente pela URL
-* **Então** eu devo ser redirecionado para a página de login
-* **E** devo ver uma mensagem informando que preciso estar logado para realizar a ação.
+* **Dado** que eu sou um usuário autenticado e estou na página principal
+* **Quando** eu clico em "Disponibilizar animal para adoção"
+* **E** preencho o formulário de cadastro do animal com dados válidos (nome "Linux", tipo "Cachorro", etc.)
+* **E** anexo uma foto do animal
+* **E** clico no botão "Cadastrar"
+* **Então** o animal "Linux" deve ser listado com sucesso na minha página de "Meus animais disponíveis para adoção".
 
 #### Cenário 3: Edição de Dados do Perfil (`editarDados.cy.js`)
 * **Dado** que estou logado no sistema
