@@ -34,18 +34,15 @@ O código-fonte para este diagrama foi gerado com o auxílio da IA Gemini e pode
 <summary>Clique para ver o código Mermaid do diagrama</summary>
 
 ```
-%% Diagrama de Alto Nível - Adote Fácil
+%% Diagrama de Componentes Técnicos - Adote Fácil
 graph TD;
-    style A fill:#f9f,stroke:#333,stroke-width:2px
     style B fill:#bbf,stroke:#333,stroke-width:2px
     style C fill:#f8d568,stroke:#333,stroke-width:2px
     style D fill:#9f9,stroke:#333,stroke-width:2px
 
-    A[Usuário] -->|"Interage no Navegador"| B(Frontend <br> Next.js/React);
-    B -->|"Requisições API (HTTPS)"| C{Backend <br> Node.js/Express};
+    B(Frontend <br> Next.js/React) -->|"Requisições API (HTTPS)"| C{Backend <br> Node.js/Express};
     C -->|"Queries SQL via Prisma ORM"| D[(Banco de Dados <br> PostgreSQL)];
     D -->|"Retorna os dados"| C;
     C -->|"Resposta JSON"| B;
-    B -->|"Renderiza a Interface"| A;
 ```
 </details>
