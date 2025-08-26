@@ -104,67 +104,11 @@ class AnimalRepository {
 }
 ```
 
-#### Benefício Direto do DIP: Alta Testabilidade
-
-A Injeção de Dependência é a chave para a testabilidade do código. Nos testes unitários, as dependências reais (que acessam o banco de dados) são facilmente substituídas por "mocks" (objetos falsos), permitindo testar a lógica de negócio de forma completamente isolada.
-
-**Exemplo Prático: Teste do `CreateAnimalService`**
-
-No teste, injetamos mocks dos repositórios para verificar se a lógica do serviço está correta, sem precisar de um banco de dados real.
-
-```typescript
-// src/services/animal/create-animal.spec.ts
-describe('CreateAnimalService', () => {
-  let sut: CreateAnimalService
-  let animalRepository: MockProxy<AnimalRepository>
-  // ...
-
-  beforeAll(() => {
-    // 1. Criamos os mocks
-    animalRepository = mock<AnimalRepository>()
-    animalImageRepository = mock<AnimalImageRepository>()
-
-    // 2. Injetamos os mocks no nosso "Sistema Sob Teste" (sut)
-    sut = new CreateAnimalService(animalRepository, animalImageRepository)
-  })
-
-  test('should call animal repository with correct values', async () => {
-    // 3. Executamos e verificamos o comportamento com os mocks
-    await sut.execute(defaultParams)
-    expect(animalRepository.create).toHaveBeenCalledWith(/* ... */)
-  })
-})
-```
-
 ---
 
 ## 2. Padrões de Projeto (Design Patterns)
 
 Além dos princípios SOLID, a aplicação utiliza diversos padrões de projeto para resolver problemas comuns de forma elegante e reutilizável.
-
-### Padrão Repository
-
-Este padrão é usado para criar uma camada de abstração entre a lógica de negócio e a fonte de dados (neste caso, o Prisma ORM). Os `Repositories` centralizam e encapsulam toda a lógica de acesso a dados.
-
-**Vantagem:** Se a equipe decidir trocar o Prisma por outro ORM, apenas a implementação dos repositórios precisaria ser alterada, enquanto as camadas de serviço e controller permaneceriam intactas.
-
-**Exemplo Prático: `AnimalRepository`**
-
-```typescript
-// src/repositories/animal.ts
-export class AnimalRepository {
-  constructor(private readonly repository: PrismaClient) {}
-
-  async create(
-    params: CreateAnimalRepositoryDTO.Params,
-  ): Promise<CreateAnimalRepositoryDTO.Result> {
-    // A chamada específica do Prisma fica encapsulada aqui
-    return this.repository.animal.create({ data: params })
-  }
-
-  // ... outros métodos de acesso a dados
-}
-```
 
 ### Padrão Singleton
 
@@ -180,31 +124,68 @@ Uma única instância do `AnimalRepository` é criada (recebendo o `prisma` como
 export const animalRepositoryInstance = new AnimalRepository(prisma)
 ```
 
-### Padrão Result Object
+### Padrão Facade
 
-Para um tratamento de erros de negócio mais robusto e explícito, a camada de serviço utiliza o padrão Result Object. Em vez de lançar exceções (`throw`), os métodos retornam um objeto que encapsula o resultado, que pode ser um `Success` (contendo o valor) ou um `Failure` (contendo o erro).
+O padrão Fachada é utilizado para fornecer uma interface simplificada e unificada para um subsistema mais complexo. No projeto, ele é aplicado de forma clara nas classes de Repositório, que servem como uma "fachada" para a complexidade do acesso ao banco de dados através do Prisma ORM.
 
-**Exemplo Prático: O Retorno do `CreateAnimalService`**
 
-O serviço retorna um `Either<Failure, Success>`, deixando claro para quem o chama (o controller) os possíveis caminhos de resultado.
+**Exemplo Prático: Repositório como Fachada para o Prisma ORM**
+
+A classe `AnimalRepository` atua como uma fachada que esconde os detalhes de implementação do Prisma. A camada de serviço não precisa saber como construir queries ou quais são os métodos específicos do Prisma; ela apenas chama os métodos simples e diretos expostos pelo repositório.
 
 ```typescript
+// A camada de serviço (cliente) usa uma interface simples:
 // src/services/animal/create-animal.ts
-export class CreateAnimalService {
-  async execute(
-    params: CreateAnimalDTO.Params,
-  ): Promise<CreateAnimalDTO.Result> {
-    const animal = await this.animalRepository.create({ /* ... */ })
+class CreateAnimalService {
+  constructor(private readonly animalRepository: AnimalRepository) {}
 
-    if (!animal) {
-      // Retorna um objeto de falha explícito
-      return Failure.create({ message: 'Erro ao criar o animal.' })
-    }
-    
+  async execute(params: ...) {
+    // Chama o método simples da fachada
+    const animal = await this.animalRepository.create({ ... });
     // ...
+  }
+}
 
-    // Retorna um objeto de sucesso explícito
-    return Success.create({ animal })
+
+// O repositório (a fachada) esconde a complexidade interna:
+// src/repositories/animal.ts
+export class AnimalRepository {
+  constructor(private readonly repository: PrismaClient) {}
+
+  async create(params: CreateAnimalRepositoryDTO.Params) {
+    // Aqui está a chamada complexa para o subsistema (Prisma),
+    // que fica escondida do serviço.
+    return this.repository.animal.create({ data: params });
+  }
+}
+```
+
+### Padrão Adapter
+
+Este padrão é utilizado para converter a interface de um objeto em outra que o cliente espera, permitindo que objetos com interfaces incompatíveis trabalhem juntos. No projeto, ele é aplicado na camada de API do frontend para normalizar as complexas respostas de erro da biblioteca `axios` em um formato simples e consistente que o resto da aplicação possa manusear facilmente.
+
+**Vantagem:** O resto da aplicação não precisa saber como tratar a estrutura específica de um `AxiosError`. Se a biblioteca de requisições HTTP (`axios`) for trocada por outra no futuro, apenas este "adaptador" de erro precisaria ser modificado, garantindo que o restante do código que consome a API não seja afetado.
+
+**Exemplo Prático: `makeRequest` adaptando o `AxiosError`**
+
+```typescript
+// src/api/index.ts
+export async function makeRequest({ /* ...parâmetros... */ }) {
+  try {
+    const response = await api.request({ /* ... */ });
+    return response;
+  } catch (err) {
+    const error = err as AxiosError; // O objeto original com interface complexa
+
+    // O bloco a seguir atua como um ADAPTADOR, convertendo o erro.
+    if (error.response) {
+      // A estrutura complexa "error.response" (com headers, config, etc.)
+      // é adaptada para uma interface simples e consistente: { status, data }
+      return { status: error.response.status, data: error.response.data };
+    }
+
+    // Adapta até mesmo erros de rede (que não possuem 'response') para a mesma interface
+    return { status: 500, data: { message: error.message } };
   }
 }
 ```
